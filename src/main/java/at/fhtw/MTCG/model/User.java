@@ -7,11 +7,11 @@ public class User {
     @JsonAlias({"U_ID"})    //PK
     @JsonProperty("U_ID")
     private Integer U_ID;
-    @JsonAlias({"username"})
-    @JsonProperty("username")
+    @JsonAlias({"Username"})
+    @JsonProperty("Username")
     private String username;
-    @JsonAlias({"password"})
-    @JsonProperty("password")
+    @JsonAlias({"Password"})
+    @JsonProperty("Password")
     private String password;
     @JsonAlias({"coins"})   //start at 20 coins
     @JsonProperty("coins")

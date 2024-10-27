@@ -14,10 +14,10 @@ public class UserService implements Service  {
 
     @Override
     public Response handleRequest(Request request) {
-        if (request.getMethod() == Method.POST && request.getPathParts().contains("register")) {
+        if (request.getMethod() == Method.POST && request.getPathParts().contains("users")) {
             // Handle user registration
             return this.userController.register_user(request);
-        } else if (request.getMethod() == Method.POST && request.getPathParts().contains("login")) {
+        } else if (request.getMethod() == Method.POST && request.getPathParts().contains("sessions")) {
             // Handle user login
             return this.userController.login_user(request);
         }

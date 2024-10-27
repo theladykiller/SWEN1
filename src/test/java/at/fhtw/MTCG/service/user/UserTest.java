@@ -3,7 +3,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import java.io.*;
-import java.net.*;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,7 +11,7 @@ import java.net.URLConnection;
 import java.util.Map;
 import java.net.HttpURLConnection;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class UserRegistrationTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -20,10 +19,10 @@ class UserRegistrationTest {
     @Test
     void testUserRegistration() throws Exception {
         // Sample user data for registration
-        String userJson = "{\"username\":\"testuser\",\"password\":\"testpass\"}";
+        String userJson = "{\"Username\":\"testuser\",\"Password\":\"testpass\"}";
 
         // Set up connection to the registration endpoint
-        URL url = new URL("http://localhost:10001/register"); // Adjust URL as needed
+        URL url = new URL("http://localhost:10001/users"); // Adjust URL as needed
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
         urlConnection.setDoOutput(true);
         urlConnection.setRequestMethod("POST");
@@ -37,7 +36,10 @@ class UserRegistrationTest {
 
         // Check response code
         int responseCode = urlConnection.getResponseCode();
-        assertEquals(HttpURLConnection.HTTP_CREATED, responseCode); // Expect 201 Created
+
+        // Assert that the response is either 201 Created (successful registration) or 409 Conflict (user already exists)
+        assertTrue(responseCode == HttpURLConnection.HTTP_CREATED || responseCode == HttpURLConnection.HTTP_CONFLICT,
+                "Expected response code 201 (Created) or 409 (Conflict), but got " + responseCode);
     }
 }
 
@@ -47,10 +49,10 @@ class UserLoginTest {
     @Test
     void testUserLogin() throws Exception {
         // Sample login data
-        String loginJson = "{\"username\":\"testuser\",\"password\":\"testpass\"}";
+        String loginJson = "{\"Username\":\"testuser\",\"Password\":\"testpass\"}";
 
         // Set up connection to the login endpoint
-        URL url = new URL("http://localhost:10001/login"); // Adjust URL as needed
+        URL url = new URL("http://localhost:10001/sessions"); // Adjust URL as needed
         URLConnection urlConnection = url.openConnection();
         urlConnection.setDoOutput(true);
         urlConnection.setRequestProperty("Content-Type", "application/json");
@@ -70,16 +72,21 @@ class UserLoginTest {
         Map<String, String> responseMap = objectMapper.readValue(response, new TypeReference<Map<String, String>>() {});
         assertEquals("Login successful", responseMap.get("message"));
 
+        // Validate the token
+        String token = responseMap.get("token");
+        assertNotNull(token, "Token should not be null");
+        assertEquals("testuser-mtcgToken", token, "Token should be in the format 'username-mtcgToken'");
+
         bufferedReader.close();
     }
 
     @Test
     void testUserLoginInvalidCredentials() throws Exception {
         // Sample login data with invalid credentials
-        String loginJson = "{\"username\":\"invaliduser\",\"password\":\"wrongpass\"}";
+        String loginJson = "{\"Username\":\"invaliduser\",\"Password\":\"wrongpass\"}";
 
         // Set up connection to the login endpoint
-        URL url = new URL("http://localhost:10001/login"); // Adjust URL as needed
+        URL url = new URL("http://localhost:10001/sessions"); // Adjust URL as needed
         URLConnection urlConnection = url.openConnection();
         urlConnection.setDoOutput(true);
         urlConnection.setRequestProperty("Content-Type", "application/json");

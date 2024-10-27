@@ -19,6 +19,21 @@ public class UserRepository {
     // Method to register a new user
     public void registerUser(User user) {
         try {
+            // Step 0: Check if the user already exists
+            boolean userExists;
+            try (PreparedStatement preparedStatement = this.unitOfWork.prepareStatement("""
+                SELECT 1 FROM "User" WHERE username = ?
+            """)) {
+                preparedStatement.setString(1, user.get_username());
+
+                ResultSet resultSet = preparedStatement.executeQuery();
+                userExists = resultSet.next(); // If there's a result, the user already exists
+            }
+
+            if (userExists) {
+                throw new DataAccessException("User already exists");
+            }
+
             // Step 1: Insert a new User entry without D_ID
             int generatedUserId;
             try (PreparedStatement preparedStatement = this.unitOfWork.prepareStatement("""

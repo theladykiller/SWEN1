@@ -1,5 +1,6 @@
 package at.fhtw.MTCG.service.user;
 
+import at.fhtw.MTCG.dal.DataAccessException;
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;
 import at.fhtw.httpserver.server.Request;
@@ -32,6 +33,15 @@ public class UserController extends Controller {
 
             // Return success response
             return new Response(HttpStatus.CREATED, ContentType.JSON, "{\"message\":\"User registered successfully\"}");
+        } catch (DataAccessException e) {
+            if ("User already exists".equals(e.getMessage())) {
+                // Return 409 Conflict if the user already exists
+                return new Response(HttpStatus.CONFLICT, ContentType.JSON, "{\"message\":\"User already exists\"}");
+            } else {
+                // For other database-related exceptions, return 500 Internal Server Error
+                e.printStackTrace();
+                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error registering user\"}");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error registering user\"}");
@@ -42,14 +52,18 @@ public class UserController extends Controller {
         try {
             // Assuming the login data comes in the request body as JSON
             Map<String, String> loginData = this.getObjectMapper().readValue(request.getBody(), new TypeReference<Map<String, String>>() {});
-            String username = loginData.get("username");
-            String password = loginData.get("password");
+            String username = loginData.get("Username");
+            String password = loginData.get("Password");
 
             // Assuming you have a method in UserRepository to validate the user
             User user = userRepository.findUserByUsername(username);
             if (user != null && user.get_password().equals(password)) {
-                // Return success response on login
-                return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\":\"Login successful\"}");
+                // Create the token in the format "username-mtcgToken"
+                String token = username + "-mtcgToken";
+
+                // Return success response with the generated token
+                String jsonResponse = String.format("{\"message\":\"Login successful\", \"token\":\"%s\"}", token);
+                return new Response(HttpStatus.OK, ContentType.JSON, jsonResponse);
             } else {
                 // Return unauthorized response if credentials are incorrect
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\":\"Invalid username or password\"}");

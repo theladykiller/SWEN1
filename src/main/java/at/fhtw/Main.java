@@ -22,8 +22,8 @@ public class Main {
     {
         Router router = new Router();
         router.addService("/echo", new EchoService());
-        router.addService("/register", new UserService());
-        router.addService("/login", new UserService());
+        router.addService("/users", new UserService());
+        router.addService("/sessions", new UserService());
 
         return router;
     }
