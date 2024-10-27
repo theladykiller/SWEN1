@@ -1,4 +1,4 @@
-package at.fhtw.sampleapp.dal;
+package at.fhtw.MTCG.dal;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,9 +11,9 @@ public enum DatabaseManager {
     {
         try {
             return DriverManager.getConnection(
-                    "jdbc:postgresql://localhost:5432/weatherdb",
-                    "weatherdb",
-                    "weatherdb");
+                    "jdbc:postgresql://localhost:5432/mtcg",
+                    "mtcg",
+                    "MTCG");
         } catch (SQLException e) {
             throw new DataAccessException("Datenbankverbindungsaufbau nicht erfolgreich", e);
         }

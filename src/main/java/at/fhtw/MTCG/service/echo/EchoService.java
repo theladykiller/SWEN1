@@ -1,4 +1,4 @@
-package at.fhtw.sampleapp.service.echo;
+package at.fhtw.MTCG.service.echo;
 
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;

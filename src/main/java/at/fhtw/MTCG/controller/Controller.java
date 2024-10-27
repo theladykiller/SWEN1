@@ -1,4 +1,4 @@
-package at.fhtw.sampleapp.controller;
+package at.fhtw.MTCG.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

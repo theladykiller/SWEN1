@@ -1,4 +1,4 @@
-package at.fhtw.sampleapp.dal;
+package at.fhtw.MTCG.dal;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,6 +15,15 @@ public class UnitOfWork implements AutoCloseable{
             throw new DataAccessException("Autocommit nicht deaktivierbar", e);
         }
     }
+
+    public void beginTransaction() {
+        try {
+            this.connection.setAutoCommit(false); // Begin transaction by disabling auto-commit
+        } catch (SQLException e) {
+            throw new DataAccessException("Error beginning transaction", e);
+        }
+    }
+
 
     public void commitTransaction()
     {
