@@ -109,5 +109,42 @@ public class UserRepository {
         }
         return null; // Return null if no user is found
     }
-    // Add other methods as needed (e.g., to get all users, delete users, etc.)
+
+    public void deleteUser(String username, String password) {
+        try {
+            // Validate username and password
+            boolean validCredentials;
+            try (PreparedStatement preparedStatement = this.unitOfWork.prepareStatement("""
+                SELECT 1 FROM "User" WHERE username = ? AND password = ?
+            """)) {
+                preparedStatement.setString(1, username);
+                preparedStatement.setString(2, password);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                validCredentials = resultSet.next();
+            }
+
+            if (!validCredentials) {
+                throw new DataAccessException("Invalid username or password");
+            }
+
+            // Delete the user
+            try (PreparedStatement preparedStatement = this.unitOfWork.prepareStatement("""
+                DELETE FROM "User" WHERE username = ?
+            """)) {
+                preparedStatement.setString(1, username);
+                int rowsAffected = preparedStatement.executeUpdate();
+
+                if (rowsAffected == 0) {
+                    throw new DataAccessException("Failed to delete user");
+                }
+            }
+
+            // Commit the transaction
+            this.unitOfWork.commitTransaction();
+        } catch (SQLException e) {
+            this.unitOfWork.rollbackTransaction(); // Rollback in case of error
+            throw new DataAccessException("Error deleting user", e);
+        }
+    }
+    // Add other methods as needed (e.g., to get all users, etc.)
 }

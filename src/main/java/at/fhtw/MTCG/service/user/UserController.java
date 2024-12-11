@@ -73,4 +73,36 @@ public class UserController extends Controller {
             return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error logging in\"}");
         }
     }
+
+    public Response delete_user(Request request) {
+        try {
+            // Parse the request body for username and password
+            Map<String, String> requestData = this.getObjectMapper().readValue(request.getBody(), new TypeReference<Map<String, String>>() {});
+            String username = requestData.get("Username");
+            String password = requestData.get("Password");
+
+            // Call the repository method to delete the user
+            userRepository.deleteUser(username, password);
+
+            // Return success response
+            return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\":\"User deleted successfully\"}");
+        } catch (DataAccessException e) {
+            if ("Invalid username or password".equals(e.getMessage())) {
+                // Return 401 Unauthorized if credentials are incorrect
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\":\"Invalid username or password\"}");
+            } else if ("User does not exist".equals(e.getMessage())) {
+                // Return 404 Not Found if the user does not exist
+                return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, "{\"message\":\"User not found\"}");
+            } else {
+                // Return 500 Internal Server Error for other database errors
+                e.printStackTrace();
+                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error deleting user\"}");
+            }
+        } catch (Exception e) {
+            // Return 500 Internal Server Error for unexpected exceptions
+            e.printStackTrace();
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error deleting user\"}");
+        }
+    }
+
 }

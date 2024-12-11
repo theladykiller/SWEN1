@@ -2,11 +2,11 @@ package at.fhtw.httpserver.utils;
 
 import at.fhtw.httpserver.server.Service;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 public class Router {
-    private Map<String, Service> serviceRegistry = new HashMap<>();
+    private Map<String, Service> serviceRegistry = new ConcurrentHashMap<>();
 
     public void addService(String route, Service service)
     {
