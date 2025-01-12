@@ -5,6 +5,7 @@ import at.fhtw.httpserver.utils.Router;
 
 import at.fhtw.MTCG.service.echo.EchoService;
 import at.fhtw.MTCG.service.user.UserService;
+import at.fhtw.MTCG.service.packages.PackagesService;
 
 import java.io.IOException;
 
@@ -24,6 +25,8 @@ public class Main {
         router.addService("/echo", new EchoService());
         router.addService("/users", new UserService());
         router.addService("/sessions", new UserService());
+        router.addService("/packages", new PackagesService());
+        router.addService("/transactions/packages", new PackagesService());
 
         return router;
     }

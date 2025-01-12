@@ -25,7 +25,7 @@ public class UserService implements Service  {
             return this.userController.login_user(request);
         }
 
-        // If the request doesn't match registration or login, return a bad request
+        // If the request doesn't match registration, deletion or login, return a bad request
         return new Response(
                 HttpStatus.BAD_REQUEST,
                 ContentType.JSON,

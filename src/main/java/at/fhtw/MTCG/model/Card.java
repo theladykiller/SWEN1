@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Card {
     @JsonAlias({"C_ID"})    //PK
-    @JsonProperty("C_ID")
-    private Integer C_ID;
+    @JsonProperty("Id")                 //because of curl script
+    private String C_ID;
     @JsonAlias({"name"})
-    @JsonProperty("name")
+    @JsonProperty("Name")               //because of curl script
     private String name;
     @JsonAlias({"damage"})
-    @JsonProperty("damage")
+    @JsonProperty("Damage")             //because of curl script
     private Integer damage;
     @JsonAlias({"element_type"})    //Water/Fire/Normal
     @JsonProperty("element_type")
@@ -28,7 +28,7 @@ public class Card {
 
     public Card() {}
 
-    public Card(Integer C_ID, String name, Integer damage, String element_type, String card_type, String trait, Integer U_ID) {
+    public Card(String C_ID, String name, Integer damage, String element_type, String card_type, String trait, Integer U_ID) {
         this.C_ID = C_ID;
         this.name = name;
         this.damage = damage;
@@ -38,8 +38,8 @@ public class Card {
         this.U_ID = U_ID;
     }
 
-    public Integer get_C_ID() { return C_ID; }
-    public void set_C_ID(Integer C_ID) { this.C_ID = C_ID; }
+    public String get_C_ID() { return C_ID; }
+    public void set_C_ID(String C_ID) { this.C_ID = C_ID; }
 
     public String get_name() { return name; }
     public void set_name(String name) { this.name = name; }
