@@ -15,13 +15,13 @@ public class PackagesService implements Service{
 
     @Override
     public Response handleRequest(Request request) {
-        if (request.getMethod() == Method.POST && request.getPathParts().contains("packages")) {
+        if (request.getMethod() == Method.POST && request.getPathParts().contains("packages") && !request.getPathParts().contains("transactions")) {
             // Handle package creation
             return this.packagesController.create_package(request);
-        } /*else if (request.getMethod() == Method.POST && request.getPathParts().contains("transactions/packages")) {
+        } else if (request.getMethod() == Method.POST && request.getPathParts().contains("transactions")) {
             // Handle package acquisition
             return this.packagesController.acquire_package(request);
-        }*/
+        }
 
         // If the request doesn't match creation or acquisition, return a bad request
         return new Response(

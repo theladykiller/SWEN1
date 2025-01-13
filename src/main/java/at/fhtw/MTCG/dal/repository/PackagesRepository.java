@@ -82,10 +82,139 @@ public class PackagesRepository {
         }
     }
 
+    public Package acquirePackage(String username) {
+        try {
+            // Start a transaction
+            this.unitOfWork.beginTransaction();
+
+            // Step 1: Select a random package
+            int packageId;
+            int packagePrice;
+            List<String> cardIds = new ArrayList<>();
+            try (PreparedStatement selectPackageStmt = this.unitOfWork.prepareStatement("""
+            SELECT P_ID, price, C1_ID, C2_ID, C3_ID, C4_ID, C5_ID 
+            FROM Package
+            ORDER BY RANDOM() LIMIT 1
+        """)) {
+                ResultSet resultSet = selectPackageStmt.executeQuery();
+                if (resultSet.next()) {
+                    packageId = resultSet.getInt("P_ID");
+                    packagePrice = resultSet.getInt("price");
+                    cardIds.add(resultSet.getString("C1_ID"));
+                    cardIds.add(resultSet.getString("C2_ID"));
+                    cardIds.add(resultSet.getString("C3_ID"));
+                    cardIds.add(resultSet.getString("C4_ID"));
+                    cardIds.add(resultSet.getString("C5_ID"));
+                } else {
+                    throw new DataAccessException("No packages available");
+                }
+            }
+
+            // Step 2.1: Retrieve the U_ID of the user based on the username
+            int userId;
+            int userCoins;
+            try (PreparedStatement selectUserStmt = this.unitOfWork.prepareStatement("""
+            SELECT u_id, coins 
+            FROM "User" 
+            WHERE username = ?
+        """)) {
+                selectUserStmt.setString(1, username);
+                ResultSet resultSet = selectUserStmt.executeQuery();
+                if (resultSet.next()) {
+                    userId = resultSet.getInt("U_ID");
+                    userCoins = resultSet.getInt("coins");
+                } else {
+                    throw new DataAccessException("User not found");
+                }
+            }
+
+            // Step 2.2: Check if the user has enough coins
+            if (userCoins < packagePrice) {
+                throw new DataAccessException("Not enough coins");
+            }
+
+            // Step 2.4: Assign the cards to the user
+            try (PreparedStatement updateCardsStmt = this.unitOfWork.prepareStatement("""
+            UPDATE Card 
+            SET U_ID = ? 
+            WHERE C_ID = ?
+        """)) {
+                for (String cardId : cardIds) {
+                    updateCardsStmt.setInt(1, userId);
+                    updateCardsStmt.setString(2, cardId);
+                    updateCardsStmt.executeUpdate();
+                }
+            }
+
+            // Step 2.5: Deduct coins from the user's account
+            try (PreparedStatement updateUserCoinsStmt = this.unitOfWork.prepareStatement("""
+            UPDATE "User" 
+            SET coins = coins - ? 
+            WHERE u_id = ?
+        """)) {
+                updateUserCoinsStmt.setInt(1, packagePrice); // Deduct the package price
+                updateUserCoinsStmt.setInt(2, userId);       // Use the user's ID
+                int rowsUpdated = updateUserCoinsStmt.executeUpdate();
+
+                if (rowsUpdated == 0) {
+                    throw new DataAccessException("Failed to update user coins");
+                }
+            }
 
 
-    /*public void acquirePackage(Package packages){
+            // Step 3: Delete the package
+            try (PreparedStatement deletePackageStmt = this.unitOfWork.prepareStatement("""
+            DELETE FROM Package 
+            WHERE P_ID = ?
+        """)) {
+                deletePackageStmt.setInt(1, packageId);
+                deletePackageStmt.executeUpdate();
+            }
 
-    }*/
+            // Step 4: Retrieve the card details for the package
+            List<Card> cards = new ArrayList<>();
+            try (PreparedStatement selectCardsStmt = this.unitOfWork.prepareStatement("""
+            SELECT C_ID, name, damage, element_type, card_type, trait, U_ID
+            FROM Card 
+            WHERE C_ID = ?
+        """)) {
+                for (String cardId : cardIds) {
+                    selectCardsStmt.setString(1, cardId);
+                    ResultSet resultSet = selectCardsStmt.executeQuery();
+                    if (resultSet.next()) {
+                        Card card = new Card();
+                        card.set_C_ID(resultSet.getString("C_ID"));
+                        card.set_name(resultSet.getString("name"));
+                        card.set_damage(resultSet.getInt("damage"));
+                        card.set_element_type(resultSet.getString("element_type"));
+                        card.set_card_type(resultSet.getString("card_type"));
+                        card.set_trait(resultSet.getString("trait"));
+                        card.set_U_ID(resultSet.getInt("U_ID"));
+                        cards.add(card);
+                    }
+                }
+            }
+
+            // Step 5: Commit the transaction and return the package
+            this.unitOfWork.commitTransaction();
+
+            // Create and return the Package object
+            Package acquiredPackage = new Package();
+            acquiredPackage.set_P_ID(packageId);
+            acquiredPackage.set_price(packagePrice);
+            acquiredPackage.set_C1_ID(cards.get(0).get_C_ID());
+            acquiredPackage.set_C2_ID(cards.get(1).get_C_ID());
+            acquiredPackage.set_C3_ID(cards.get(2).get_C_ID());
+            acquiredPackage.set_C4_ID(cards.get(3).get_C_ID());
+            acquiredPackage.set_C5_ID(cards.get(4).get_C_ID());
+            return acquiredPackage;
+
+        } catch (Exception e) {
+            // Rollback the transaction in case of errors
+            this.unitOfWork.rollbackTransaction();
+            throw new DataAccessException(e.getMessage());
+        }
+    }
+
 
 }

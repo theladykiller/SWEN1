@@ -56,6 +56,6 @@ public class Card {
     public String get_trait() { return trait; }
     public void set_trait(String trait) { this.trait = trait; }
 
-    public Integer get_S_ID() { return U_ID; }
-    public void set_S_ID(Integer U_ID) { this.U_ID = U_ID; }
+    public Integer get_U_ID() { return U_ID; }
+    public void set_U_ID(Integer U_ID) { this.U_ID = U_ID; }
 }
