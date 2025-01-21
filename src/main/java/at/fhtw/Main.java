@@ -7,6 +7,7 @@ import at.fhtw.MTCG.service.echo.EchoService;
 import at.fhtw.MTCG.service.user.UserService;
 import at.fhtw.MTCG.service.packages.PackagesService;
 import at.fhtw.MTCG.service.card.CardsService;
+import at.fhtw.MTCG.service.deck.DeckService;
 
 import java.io.IOException;
 
@@ -29,6 +30,7 @@ public class Main {
         router.addService("/packages", new PackagesService());
         router.addService("/transactions", new PackagesService());
         router.addService("/cards", new CardsService());
+        router.addService("/deck", new DeckService());
 
         return router;
     }
