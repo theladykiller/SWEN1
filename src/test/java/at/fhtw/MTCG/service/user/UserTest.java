@@ -116,9 +116,9 @@ class UserTest {
 
     @Test
     @Order(4)
-    void testUserLoginInvalidCredentials() throws Exception {
+    void testUserLoginUserNotFound() throws Exception {
         // Sample login data with invalid credentials
-        String loginJson = "{\"Username\":\"invaliduser\",\"Password\":\"wrongpass\"}";
+        String loginJson = "{\"Username\":\"invaliduser\",\"Password\":\"invalidpass\"}";
 
         // Set up connection to the login endpoint
         URL url = new URL("http://localhost:10001/sessions"); // Adjust URL as needed
@@ -134,11 +134,36 @@ class UserTest {
         // Check response code
         int responseCode = ((HttpURLConnection) urlConnection).getResponseCode();
 
-        // Assert that the response code is 401 Unauthorized
-        assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, responseCode); // Test is successful if this assertion passes
+        // Assert that the response code is 404 NOT_FOUND
+        assertEquals(HttpURLConnection.HTTP_NOT_FOUND, responseCode); // Test is successful if this assertion passes
     }
+
     @Test
     @Order(5)
+    void testUserLoginInvalidCredentials() throws Exception {
+        // Sample login data with invalid credentials
+        String loginJson = "{\"Username\":\"testuser\",\"Password\":\"wrongpass\"}";
+
+        // Set up connection to the login endpoint
+        URL url = new URL("http://localhost:10001/sessions"); // Adjust URL as needed
+        URLConnection urlConnection = url.openConnection();
+        urlConnection.setDoOutput(true);
+        urlConnection.setRequestProperty("Content-Type", "application/json");
+
+        // Send the request
+        try (OutputStream os = urlConnection.getOutputStream()) {
+            os.write(loginJson.getBytes());
+        }
+
+        // Check response code
+        int responseCode = ((HttpURLConnection) urlConnection).getResponseCode();
+
+        // Assert that the response code is 401 NOT_FOUND
+        assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, responseCode); // Test is successful if this assertion passes
+    }
+
+    @Test
+    @Order(6)
     void testGetUserValid() throws Exception {
         // Set up the URL for the GET request
         URL url = new URL("http://localhost:10001/users/testuser");
@@ -154,7 +179,7 @@ class UserTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     void testUpdateUserValid() throws Exception {
         // Set up the URL and JSON payload for the PUT request
         URL url = new URL("http://localhost:10001/users/testuser");
@@ -179,7 +204,7 @@ class UserTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     void testGetUserUnauthorized() throws Exception {
         // Set up the URL for the GET request
         URL url = new URL("http://localhost:10001/users/testuser");
@@ -195,7 +220,7 @@ class UserTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     void testUpdateUserUnauthorized() throws Exception {
         // Set up the URL and JSON payload for the PUT request
         URL url = new URL("http://localhost:10001/users/testuser");
@@ -220,7 +245,7 @@ class UserTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     void testUpdateUserIncorrectJson() throws Exception {
         // Set up the URL and JSON payload for the PUT request
         URL url = new URL("http://localhost:10001/users/testuser");
@@ -245,7 +270,39 @@ class UserTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
+    void testShowUserStats() throws Exception {
+        // Set up the URL and JSON payload for the PUT request
+        URL url = new URL("http://localhost:10001/stats");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Authorization", "Bearer testuser-mtcgToken");
+
+        // Get the response code
+        int responseCode = connection.getResponseCode();
+
+        // Assert that the response code is 200 OK
+        assertEquals(HttpURLConnection.HTTP_OK, responseCode);
+    }
+
+    @Test
+    @Order(12)
+    void testShowUserStatsUserNotFound() throws Exception {
+        // Set up the URL and JSON payload for the PUT request
+        URL url = new URL("http://localhost:10001/stats");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Authorization", "Bearer nonExistentUser-mtcgToken");
+
+        // Get the response code
+        int responseCode = connection.getResponseCode();
+
+        // Assert that the response code is 200 OK
+        assertEquals(HttpURLConnection.HTTP_NOT_FOUND, responseCode);
+    }
+
+    @Test
+    @Order(13)
     void testDeleteUser() throws Exception {
         // User credentials to delete (same as registered in @BeforeAll)
         String deleteUserJson = "{\"Username\":\"testuser\",\"Password\":\"testpass\"}";
@@ -280,7 +337,7 @@ class UserTest {
     }
 
     @Test
-    @Order(11)
+    @Order(14)
     void testConcurrentUserRegistration() throws Exception {
         final int THREAD_COUNT = 10;
         Thread[] threads = new Thread[THREAD_COUNT];
@@ -331,7 +388,7 @@ class UserTest {
     }
 
     @Test
-    @Order(12)
+    @Order(15)
     void testConcurrentUserLogin() throws Exception {
         final int THREAD_COUNT = 10;
         Thread[] threads = new Thread[THREAD_COUNT];
@@ -388,7 +445,22 @@ class UserTest {
     }
 
     @Test
-    @Order(13)
+    @Order(16)
+    void testShowScoreboard() throws Exception {
+        URL url = new URL("http://localhost:10001/scoreboard");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Authorization", "Bearer testuser-mtcgToken");
+
+        // Get the response code
+        int responseCode = connection.getResponseCode();
+
+        // Assert that the response code is 200 OK
+        assertEquals(HttpURLConnection.HTTP_OK, responseCode);
+    }
+
+    @Test
+    @Order(17)
     void testConcurrentUserDeletion() throws Exception {
         final int THREAD_COUNT = 10;
         Thread[] threads = new Thread[THREAD_COUNT];

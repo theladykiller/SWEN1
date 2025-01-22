@@ -106,11 +106,13 @@ public class UserRepository {
                         resultSet.getString("image"),
                         resultSet.getString("name")
                 );
+            }else {
+                // User not found
+                throw new DataAccessException("User not found");
             }
         } catch (SQLException e) {
             throw new DataAccessException("Error finding user by username", e);
         }
-        return null; // Return null if no user is found
     }
 
     public void deleteUser(String username, String password) {
@@ -223,6 +225,26 @@ public class UserRepository {
             throw new DataAccessException("Error updating user", e);
         }
     }
-
-
+    public List<Map<String, Object>> showScoreboard() {
+        List<Map<String, Object>> scoreboard = new ArrayList<>();
+        try {
+            try (PreparedStatement preparedStatement = this.unitOfWork.prepareStatement("""
+                SELECT username, elo, score, game_count
+                FROM "User"
+                ORDER BY score DESC, game_count ASC
+            """)) {
+                ResultSet resultSet = preparedStatement.executeQuery();
+                while (resultSet.next()) {
+                    Map<String, Object> user = new LinkedHashMap<>();
+                    user.put("username", resultSet.getString("username"));
+                    user.put("elo", resultSet.getString("elo"));
+                    user.put("score", resultSet.getInt("score"));
+                    scoreboard.add(user);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error retrieving scoreboard", e);
+        }
+        return scoreboard;
+    }
 }

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,17 +58,22 @@ public class UserController extends Controller {
             String password = loginData.get("Password");
 
             User user = userRepository.findUserByUsername(username);
-            if (user != null && user.get_password().equals(password)) {
-                // Create the token in the format "username-mtcgToken"
-                String token = username + "-mtcgToken";
-
-                // Return success response with the generated token
-                String jsonResponse = String.format("{\"message\":\"Login successful\", \"token\":\"%s\"}", token);
-                return new Response(HttpStatus.OK, ContentType.JSON, jsonResponse);
-            } else {
-                // Return unauthorized response if credentials are incorrect
-                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\":\"Invalid username or password\"}");
+            if (!user.get_password().equals(password)) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "Wrong password");
             }
+
+            String token = username + "-mtcgToken";
+
+            // Return success response with the generated token
+            String jsonResponse = String.format("{\"message\":\"Login successful\", \"token\":\"%s\"}", token);
+            return new Response(HttpStatus.OK, ContentType.JSON, jsonResponse);
+        }catch (DataAccessException e) {
+            if ("User not found".equals(e.getMessage())) {
+                return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, e.getMessage());
+            }
+            e.printStackTrace();
+            // Return 500 Internal Server Error for database issues
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error saving package\"}");
         } catch (Exception e) {
             e.printStackTrace();
             return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error logging in\"}");
@@ -191,4 +197,59 @@ public class UserController extends Controller {
         }
     }
 
+    public Response get_user_stats(Request request) {
+        try {
+            String authorizationHeader = request.getHeaderMap().getHeader("Authorization");
+            if (authorizationHeader == null || authorizationHeader.isEmpty()) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\":\"Unauthorized access\"}");
+            }
+            String username = request.getHeaderMap().getHeader("Authorization").replace("Bearer ", "").replace("-mtcgToken", "");
+
+            User user = userRepository.findUserByUsername(username);
+            // Create a map containing only the required fields
+            Map<String, Object> stats = new LinkedHashMap<>();
+            stats.put("name", user.get_name());
+            stats.put("elo", user.get_elo());
+            stats.put("score", user.get_score());
+            stats.put("game_count", user.get_game_count());
+            // Make response readable
+            String response = getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(stats);
+            // Return success response
+            return new Response(HttpStatus.OK, ContentType.JSON, response);
+        } catch (DataAccessException e) {
+            if ("User not found".equals(e.getMessage())) {
+                // Return 404 Not Found if no packages are available
+                return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, e.getMessage());
+            }
+
+            e.printStackTrace();
+            // Return 500 Internal Server Error for database issues
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error saving package\"}");
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Catch all other exceptions
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Unexpected error occurred\"}");
+        }
+    }
+    public Response show_scoreboard(Request request) {
+        try {
+            String authorizationHeader = request.getHeaderMap().getHeader("Authorization");
+            if (authorizationHeader == null || authorizationHeader.isEmpty()) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\":\"Unauthorized access\"}");
+            }
+            List<Map<String, Object>> scoreboard = userRepository.showScoreboard();
+            String response = getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(scoreboard);
+            System.out.println(response);
+            return new Response(HttpStatus.OK, ContentType.JSON, response);
+        } catch (DataAccessException e) {
+
+            e.printStackTrace();
+            // Return 500 Internal Server Error for database issues
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error saving package\"}");
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Catch all other exceptions
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Unexpected error occurred\"}");
+        }
+    }
 }

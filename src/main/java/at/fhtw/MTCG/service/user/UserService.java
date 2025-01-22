@@ -29,6 +29,12 @@ public class UserService implements Service  {
         } else if (request.getMethod() == Method.PUT && request.getPathParts().size() == 2 && "users".equals(request.getPathParts().get(0))) {
             // Handle updating user data
             return this.userController.update_user_data(request);
+        } else if (request.getMethod() == Method.GET && request.getPathParts().contains("stats")) {
+            // Handle user deletion
+            return this.userController.get_user_stats(request);
+        }else if (request.getMethod() == Method.GET && request.getPathParts().contains("scoreboard")) {
+            // Handle user deletion
+            return this.userController.show_scoreboard(request);
         }
 
         // If the request doesn't match registration, deletion or login, return a bad request

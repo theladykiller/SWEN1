@@ -25,10 +25,15 @@ public class Main {
     {
         Router router = new Router();
         router.addService("/echo", new EchoService());
+
         router.addService("/users", new UserService());
         router.addService("/sessions", new UserService());
+        router.addService("/stats", new UserService());
+        router.addService("/scoreboard", new UserService());
+
         router.addService("/packages", new PackagesService());
         router.addService("/transactions", new PackagesService());
+
         router.addService("/cards", new CardsService());
         router.addService("/deck", new DeckService());
 
