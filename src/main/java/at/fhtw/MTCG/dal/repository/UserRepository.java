@@ -5,11 +5,11 @@ import at.fhtw.MTCG.dal.UnitOfWork;
 import at.fhtw.MTCG.model.User;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.ResultSet;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Collection;
+
+import java.util.*;
 
 public class UserRepository {
     private UnitOfWork unitOfWork;
@@ -57,7 +57,7 @@ public class UserRepository {
                 VALUES (?, ?, ?, ?, ?)
             """)) {
                 preparedStatement.setInt(1, generatedUserId); // Set D_ID to be the same as U_ID
-                preparedStatement.setObject(2, null, Types.INTEGER); // Example for nullable FK
+                preparedStatement.setObject(2, null, Types.INTEGER);
                 preparedStatement.setObject(3, null, Types.INTEGER);
                 preparedStatement.setObject(4, null, Types.INTEGER);
                 preparedStatement.setObject(5, null, Types.INTEGER);
@@ -101,7 +101,10 @@ public class UserRepository {
                         resultSet.getInt("score"),
                         resultSet.getString("elo"),
                         resultSet.getInt("game_count"),
-                        resultSet.getInt("D_ID")
+                        resultSet.getInt("D_ID"),
+                        resultSet.getString("bio"),
+                        resultSet.getString("image"),
+                        resultSet.getString("name")
                 );
             }
         } catch (SQLException e) {
@@ -146,5 +149,80 @@ public class UserRepository {
             throw new DataAccessException("Error deleting user", e);
         }
     }
-    // Add other methods as needed (e.g., to get all users, etc.)
+
+    public void updateUserData(String currentUsername, Map<String, Object> updateData) {
+        try {
+            // Define the valid keys that correspond to the database columns
+            Set<String> validKeys = Set.of("password", "Bio", "Image", "Name");
+
+            // Check for invalid keys
+            for (String key : updateData.keySet()) {
+                if (!validKeys.contains(key)) {
+                    throw new IllegalArgumentException("Invalid key: " + key);
+                }
+            }
+
+            this.unitOfWork.beginTransaction();
+
+            if (updateData.containsKey("password")) {
+                try (PreparedStatement preparedStatement = this.unitOfWork.prepareStatement("""
+                    UPDATE "User" SET password = ? WHERE username = ?
+                """)) {
+                    preparedStatement.setString(1, (String) updateData.get("password"));
+                    preparedStatement.setString(2, currentUsername);
+                    int rowsUpdated = preparedStatement.executeUpdate();
+                    if (rowsUpdated == 0) {
+                        throw new DataAccessException("Error updating password");
+                    }
+                }
+            }
+
+            if (updateData.containsKey("Bio")) {
+                try (PreparedStatement preparedStatement = this.unitOfWork.prepareStatement("""
+                    UPDATE "User" SET bio = ? WHERE username = ?
+                """)) {
+                    preparedStatement.setString(1, (String) updateData.get("Bio"));
+                    preparedStatement.setString(2, currentUsername);
+                    int rowsUpdated = preparedStatement.executeUpdate();
+                    if (rowsUpdated == 0) {
+                        throw new DataAccessException("Error updating bio");
+                    }
+                }
+            }
+
+            if (updateData.containsKey("Image")) {
+                try (PreparedStatement preparedStatement = this.unitOfWork.prepareStatement("""
+                    UPDATE "User" SET image = ? WHERE username = ?
+                """)) {
+                    preparedStatement.setString(1, (String) updateData.get("Image"));
+                    preparedStatement.setString(2, currentUsername);
+                    int rowsUpdated = preparedStatement.executeUpdate();
+                    if (rowsUpdated == 0) {
+                        throw new DataAccessException("Error updating image");
+                    }
+                }
+            }
+
+            // Update fields one by one using separate PreparedStatements
+            if (updateData.containsKey("Name")) {
+                try (PreparedStatement preparedStatement = this.unitOfWork.prepareStatement("""
+                    UPDATE "User" SET name = ? WHERE username = ?
+                """)) {
+                    preparedStatement.setString(1, (String) updateData.get("Name"));
+                    preparedStatement.setString(2, currentUsername);
+                    int rowsUpdated = preparedStatement.executeUpdate();
+                    if (rowsUpdated == 0) {
+                        throw new DataAccessException("Error updating name");
+                    }
+                }
+            }
+
+            this.unitOfWork.commitTransaction();
+        } catch (SQLException e) {
+            this.unitOfWork.rollbackTransaction();
+            throw new DataAccessException("Error updating user", e);
+        }
+    }
+
+
 }

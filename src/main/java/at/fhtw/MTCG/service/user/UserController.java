@@ -1,6 +1,7 @@
 package at.fhtw.MTCG.service.user;
 
 import at.fhtw.MTCG.dal.DataAccessException;
+import at.fhtw.MTCG.model.Card;
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;
 import at.fhtw.httpserver.server.Request;
@@ -55,7 +56,6 @@ public class UserController extends Controller {
             String username = loginData.get("Username");
             String password = loginData.get("Password");
 
-            // Assuming you have a method in UserRepository to validate the user
             User user = userRepository.findUserByUsername(username);
             if (user != null && user.get_password().equals(password)) {
                 // Create the token in the format "username-mtcgToken"
@@ -102,6 +102,92 @@ public class UserController extends Controller {
             // Return 500 Internal Server Error for unexpected exceptions
             e.printStackTrace();
             return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error deleting user\"}");
+        }
+    }
+
+    public Response get_user_data(Request request) {
+        try {
+            String authorizationHeader = request.getHeaderMap().getHeader("Authorization");
+            if (authorizationHeader == null || authorizationHeader.isEmpty()) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\":\"Unauthorized access\"}");
+            }
+            String username = request.getHeaderMap().getHeader("Authorization").replace("Bearer ", "").replace("-mtcgToken", "");
+
+            //get path
+            List<String> pathParts = request.getPathParts();
+            //check if token exists && if path matches username
+            if (pathParts.isEmpty() || !pathParts.get(pathParts.size() - 1).equals(username)) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\":\"Unauthorized access\"}");
+            }
+
+            User user = userRepository.findUserByUsername(username);
+            // Make response readable
+            String response = getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(user);
+            // Return success response
+            return new Response(HttpStatus.OK, ContentType.JSON, response);
+        } catch (DataAccessException e) {
+            e.printStackTrace();
+            // Return 500 Internal Server Error for database issues
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error saving package\"}");
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Catch all other exceptions
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Unexpected error occurred\"}");
+        }
+    }
+
+    public Response update_user_data(Request request) {
+        try {
+            String authorizationHeader = request.getHeaderMap().getHeader("Authorization");
+            if (authorizationHeader == null || authorizationHeader.isEmpty()) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\":\"Unauthorized access\"}");
+            }
+            String username = request.getHeaderMap().getHeader("Authorization").replace("Bearer ", "").replace("-mtcgToken", "");
+
+            //get path
+            List<String> pathParts = request.getPathParts();
+            //check if token exists && if path matches username
+            if (pathParts.isEmpty() || !pathParts.get(pathParts.size() - 1).equals(username)) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\":\"Unauthorized access\"}");
+            }
+            // Parse JSON payload
+            Map<String, Object> updateData;
+            try {
+                updateData = getObjectMapper().readValue(request.getBody(), new TypeReference<Map<String, Object>>() {});
+            } catch (Exception e) {
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\":\"Invalid JSON payload\"}");
+            }
+            userRepository.updateUserData(username, updateData);
+            return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\":\"User data updated successfully\"}");
+        } catch (DataAccessException e) {
+            if ("Error updating username".equals(e.getMessage())) {
+                // Return 404 Not Found if no packages are available
+                return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, e.getMessage());
+            }
+            if ("Error updating password".equals(e.getMessage())) {
+                // Return 404 Not Found if no packages are available
+                return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, e.getMessage());
+            }
+            if ("Error updating bio".equals(e.getMessage())) {
+                // Return 404 Not Found if no packages are available
+                return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, e.getMessage());
+            }
+            if ("Error updating image".equals(e.getMessage())) {
+                // Return 404 Not Found if no packages are available
+                return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, e.getMessage());
+            }
+
+            e.printStackTrace();
+            // Return 500 Internal Server Error for database issues
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Error updating user\"}");
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            // Return a 400 Bad Request response for invalid input
+            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\":\"" + e.getMessage() + "\"}");
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Catch all other exceptions
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\":\"Unexpected error occurred\"}");
         }
     }
 

@@ -137,9 +137,115 @@ class UserTest {
         // Assert that the response code is 401 Unauthorized
         assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, responseCode); // Test is successful if this assertion passes
     }
-
     @Test
     @Order(5)
+    void testGetUserValid() throws Exception {
+        // Set up the URL for the GET request
+        URL url = new URL("http://localhost:10001/users/testuser");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Authorization", "Bearer testuser-mtcgToken");
+
+        // Get the response code
+        int responseCode = connection.getResponseCode();
+
+        // Assert that the response code is 200 OK
+        assertEquals(HttpURLConnection.HTTP_OK, responseCode);
+    }
+
+    @Test
+    @Order(6)
+    void testUpdateUserValid() throws Exception {
+        // Set up the URL and JSON payload for the PUT request
+        URL url = new URL("http://localhost:10001/users/testuser");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setDoOutput(true);
+        connection.setRequestMethod("PUT");
+        connection.setRequestProperty("Authorization", "Bearer testuser-mtcgToken");
+        connection.setRequestProperty("Content-Type", "application/json");
+
+        String updateJson = "{\"Name\": \"testuserNickname\", \"Bio\": \"me playin...\", \"Image\": \":-)\"}";
+
+        // Send the request
+        try (OutputStream os = connection.getOutputStream()) {
+            os.write(updateJson.getBytes());
+        }
+
+        // Get the response code
+        int responseCode = connection.getResponseCode();
+
+        // Assert that the response code is 200 OK
+        assertEquals(HttpURLConnection.HTTP_OK, responseCode);
+    }
+
+    @Test
+    @Order(7)
+    void testGetUserUnauthorized() throws Exception {
+        // Set up the URL for the GET request
+        URL url = new URL("http://localhost:10001/users/testuser");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Authorization", "Bearer hacker-mtcgToken");
+
+        // Get the response code
+        int responseCode = connection.getResponseCode();
+
+        // Assert that the response code is 401 Unauthorized
+        assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, responseCode);
+    }
+
+    @Test
+    @Order(8)
+    void testUpdateUserUnauthorized() throws Exception {
+        // Set up the URL and JSON payload for the PUT request
+        URL url = new URL("http://localhost:10001/users/testuser");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setDoOutput(true);
+        connection.setRequestMethod("PUT");
+        connection.setRequestProperty("Authorization", "Bearer hacker-mtcgToken");
+        connection.setRequestProperty("Content-Type", "application/json");
+
+        String updateJson = "{\"Name\": \"Hoax\", \"Bio\": \"me playin...\", \"Image\": \":-)\"}";
+
+        // Send the request
+        try (OutputStream os = connection.getOutputStream()) {
+            os.write(updateJson.getBytes());
+        }
+
+        // Get the response code
+        int responseCode = connection.getResponseCode();
+
+        // Assert that the response code is 401 Unauthorized
+        assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, responseCode);
+    }
+
+    @Test
+    @Order(9)
+    void testUpdateUserIncorrectJson() throws Exception {
+        // Set up the URL and JSON payload for the PUT request
+        URL url = new URL("http://localhost:10001/users/testuser");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setDoOutput(true);
+        connection.setRequestMethod("PUT");
+        connection.setRequestProperty("Authorization", "Bearer testuser-mtcgToken");
+        connection.setRequestProperty("Content-Type", "application/json");
+
+        String updateJson = "{\"IncorrectField\": \"Hoax\", \"Bio\": \"me playin...\", \"Image\": \":-)\"}";
+
+        // Send the request
+        try (OutputStream os = connection.getOutputStream()) {
+            os.write(updateJson.getBytes());
+        }
+
+        // Get the response code
+        int responseCode = connection.getResponseCode();
+
+        // Assert that the response code is 400 BAD_REQUEST
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, responseCode);
+    }
+
+    @Test
+    @Order(10)
     void testDeleteUser() throws Exception {
         // User credentials to delete (same as registered in @BeforeAll)
         String deleteUserJson = "{\"Username\":\"testuser\",\"Password\":\"testpass\"}";
@@ -174,7 +280,7 @@ class UserTest {
     }
 
     @Test
-    @Order(6)
+    @Order(11)
     void testConcurrentUserRegistration() throws Exception {
         final int THREAD_COUNT = 10;
         Thread[] threads = new Thread[THREAD_COUNT];
@@ -225,7 +331,7 @@ class UserTest {
     }
 
     @Test
-    @Order(7)
+    @Order(12)
     void testConcurrentUserLogin() throws Exception {
         final int THREAD_COUNT = 10;
         Thread[] threads = new Thread[THREAD_COUNT];
@@ -282,7 +388,7 @@ class UserTest {
     }
 
     @Test
-    @Order(8)
+    @Order(13)
     void testConcurrentUserDeletion() throws Exception {
         final int THREAD_COUNT = 10;
         Thread[] threads = new Thread[THREAD_COUNT];

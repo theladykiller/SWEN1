@@ -28,10 +28,19 @@ public class User {
     @JsonAlias({"D_ID"})    //FK to Deck.java
     @JsonProperty("D_ID")
     private Integer D_ID;
+    @JsonAlias({"bio"})
+    @JsonProperty("bio")
+    private String bio;
+    @JsonAlias({"image"})
+    @JsonProperty("image")
+    private String image;
+    @JsonAlias({"name"})
+    @JsonProperty("name")
+    private String name;
 
     public User() {}
 
-    public User(Integer U_ID, String username, String password, Integer coins, Integer score, String elo, Integer game_count, Integer D_ID) {
+    public User(Integer U_ID, String username, String password, Integer coins, Integer score, String elo, Integer game_count, Integer D_ID, String bio, String image, String name) {
         this.U_ID = U_ID;
         this.username = username;
         this.password = password;
@@ -40,6 +49,9 @@ public class User {
         this.elo = elo;
         this.game_count = game_count;
         this.D_ID = D_ID;
+        this.bio = bio;
+        this.image = image;
+        this.name = name;
     }
 
     public Integer get_U_ID() {
@@ -82,5 +94,26 @@ public class User {
     }
     public void set_D_ID(Integer D_ID) {
         this.D_ID = D_ID;
+    }
+
+    public String get_bio() {
+        return bio;
+    }
+    public void set_bio(String bio) {
+        this.bio = bio;
+    }
+
+    public String get_image() {
+        return image;
+    }
+    public void set_image(String image) {
+        this.image = image;
+    }
+
+    public String get_name() {
+        return name;
+    }
+    public void set_name(String name) {
+        this.name = name;
     }
 }
